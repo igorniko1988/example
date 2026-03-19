@@ -70,7 +70,7 @@ There is no hardcoded fallback for `GT_BASE_URL`; set it explicitly for each env
 Required for most authenticated UI scenarios:
 
 ```env
-GT_BASE_URL=https://app.gt-protocol.io
+GT_BASE_URL=https://your-gt-environment.example.com
 GT_AUTH_EMAIL=your_email@example.com
 GT_AUTH_PASSWORD=your_password_here
 ```
