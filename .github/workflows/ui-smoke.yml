@@ -64,7 +64,7 @@ jobs:
         id: smoke_tests
         continue-on-error: true
         run: |
-          python -m pytest -m smoke tests/ui --alluredir=allure-results
+          python -m pytest -m smoke tests/ui --alluredir=allure-results --clean-alluredir
 
       - name: Upload raw Allure results
         if: always()
