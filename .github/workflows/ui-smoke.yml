@@ -22,7 +22,12 @@ jobs:
       GT_AUTH_PASSWORD: ${{ secrets.GT_AUTH_PASSWORD }}
       GT_BINANCE_API_KEY: ${{ secrets.GT_BINANCE_API_KEY }}
       GT_BINANCE_API_SECRET: ${{ secrets.GT_BINANCE_API_SECRET }}
-      GT_TELEGRAM_ENABLED: "true"
+      GT_TELEGRAM_ENABLED: ${{ secrets.GT_TELEGRAM_ENABLED || 'false' }}
+      GT_TELEGRAM_BOT_TOKEN: ${{ secrets.GT_TELEGRAM_BOT_TOKEN }}
+      GT_TELEGRAM_CHAT_ID: ${{ secrets.GT_TELEGRAM_CHAT_ID }}
+      GT_TELEGRAM_REPORT_VARIANTS: ${{ secrets.GT_TELEGRAM_REPORT_VARIANTS || 'rich_counts' }}
+      GT_TELEGRAM_PROJECT_NAME: ${{ secrets.GT_TELEGRAM_PROJECT_NAME || 'GT UI Tests' }}
+      GT_TELEGRAM_VERIFY_SSL: "true"
       HEADLESS: "1"
 
     steps:
