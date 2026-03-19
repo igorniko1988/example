@@ -1,16 +1,16 @@
 name: UI Smoke
 
 on:
-  workflow_dispatch:
-  pull_request:
-    branches:
-      - main
   push:
     branches:
       - main
+  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
+  pages: write
+  id-token: write
 
 jobs:
   smoke:
@@ -33,12 +33,18 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: "pip"
 
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
 
       - name: Install Python dependencies
         run: |
@@ -53,7 +59,7 @@ jobs:
         id: smoke_tests
         continue-on-error: true
         run: |
-          pytest -m smoke tests/ui --alluredir=allure-results
+          python -m pytest -m smoke tests/ui --alluredir=allure-results
 
       - name: Upload raw Allure results
         if: always()
@@ -76,19 +82,8 @@ jobs:
             allure generate allure-results --clean -o allure-report
           else
             mkdir -p allure-report
-            cat <<'EOF' > allure-report/index.html
-            <!doctype html>
-            <html lang="en">
-            <head>
-              <meta charset="utf-8">
-              <title>Allure report unavailable</title>
-            </head>
-            <body>
-              <h1>Allure report unavailable</h1>
-              <p>No files were found in <code>allure-results</code>.</p>
-            </body>
-            </html>
-            EOF
+            echo "No Allure result files were produced."
+            printf '%s\n' '<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Allure report unavailable</title></head><body><h1>Allure report unavailable</h1><p>No files were found in <code>allure-results</code>.</p></body></html>' > allure-report/index.html
           fi
 
       - name: Upload Allure HTML report
@@ -101,7 +96,7 @@ jobs:
           retention-days: 14
 
       - name: Upload GitHub Pages artifact
-        if: always()
+        if: always() && github.event_name != 'pull_request' && github.ref_name == 'main'
         uses: actions/upload-pages-artifact@v3
         with:
           path: allure-report
@@ -111,12 +106,9 @@ jobs:
         run: exit 1
 
   deploy-pages:
-    if: always() && github.event_name != 'pull_request'
+    if: always() && github.event_name != 'pull_request' && github.ref_name == 'main'
     needs: smoke
     runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
