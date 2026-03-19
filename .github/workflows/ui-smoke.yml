@@ -1,0 +1,101 @@
+name: UI Smoke
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GT_BASE_URL: ${{ secrets.GT_BASE_URL }}
+      GT_AUTH_EMAIL: ${{ secrets.GT_AUTH_EMAIL }}
+      GT_AUTH_PASSWORD: ${{ secrets.GT_AUTH_PASSWORD }}
+      GT_BINANCE_API_KEY: ${{ secrets.GT_BINANCE_API_KEY }}
+      GT_BINANCE_API_SECRET: ${{ secrets.GT_BINANCE_API_SECRET }}
+      GT_TELEGRAM_ENABLED: "false"
+      HEADLESS: "1"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Playwright browser and system dependencies
+        run: |
+          python -m playwright install --with-deps chromium
+
+      - name: Run smoke suite
+        id: smoke_tests
+        continue-on-error: true
+        run: |
+          pytest -m smoke tests/ui --alluredir=allure-results
+
+      - name: Upload raw Allure results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-results-smoke
+          path: allure-results
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Build Allure HTML report
+        if: always()
+        uses: simple-elf/allure-report-action@v1.9
+        with:
+          allure_results: allure-results
+          allure_report: allure-report
+          keep_reports: 20
+
+      - name: Upload Allure HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report-smoke
+          path: allure-report
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload GitHub Pages artifact
+        if: always()
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: allure-report
+
+      - name: Fail workflow when smoke tests fail
+        if: steps.smoke_tests.outcome == 'failure'
+        run: exit 1
+
+  deploy-pages:
+    if: always() && github.event_name != 'pull_request'
+    needs: smoke
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
