@@ -159,6 +159,7 @@ In GitHub Actions, the `UI Smoke` workflow:
 - uploads raw `allure-results`
 - uploads rendered `allure-report` HTML as an artifact
 - publishes the latest smoke Allure report to GitHub Pages on `push` to `main` and on manual runs
+- generates Allure HTML directly with the Allure CLI instead of the deprecated Docker-based report action
 
 To view the Pages report, enable GitHub Pages in the repository settings and set the source to `GitHub Actions`.
 
