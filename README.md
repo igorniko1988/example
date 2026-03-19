@@ -8,7 +8,7 @@ The suite covers critical user journeys around:
 - Binance exchange connection
 - Marketplace regression checks
 - demo strategy flow
-- real futures strategy flow
+- real futures strategy flows
 
 ## Stack
 
